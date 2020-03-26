@@ -175,3 +175,23 @@ foreach ($zip in $zipfiles) {
 		Remove-Variable -Name done -force
 	}
 }
+
+# 7. Copy files to remote location e.g. music player
+$playerpath=Read-Host -Prompt "Enter full path of directory where extracted files should be copied. Press Enter to skip"
+if (Test-path $playerpath) {
+	$folders=GCI -path $dirpath -Recurse | ? {$_.Mode -match "^d" -and $_.CreationTime -gt ((get-Date).AddDays(-1))} | Sort-Object -Property Fullname
+	$dirmatch=($dirpath -replace "\\","\\") -replace ":","\:"
+	foreach ($folder in $folders) {
+		$destination=$folder.FullName -replace $dirmatch,$playerpath
+		if (!(Test-Path $destination)) {
+			New-Item -Type Directory -Path $destination
+		}
+		$files=Gci -Path $folder.Fullname -filter "*.mp3"
+		if ($files) {
+			foreach ($file in Gci -Path $folder.Fullname) {
+				Copy-Item -Path $file.Fullname -Destination $destination
+			}
+		}
+		Remove-Variable -name destination,files -force -erroraction silentlycontinue
+	}
+}
