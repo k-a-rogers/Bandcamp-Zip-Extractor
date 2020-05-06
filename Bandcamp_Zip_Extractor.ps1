@@ -91,7 +91,7 @@ Function Rename-LongTracks {
 	Set-Location $location
 	$tracklist=Gci -Filter "*.mp3"
 	foreach ($t in $tracklist) {
-		$Newname=$t.Name.ToString().Replace($replace,"")
+		$newname=$t.Name.ToString().Replace($replace,"")
 		Rename-Item -Path $t.FullName -NewName $newname
 		Remove-Variable -name newname -force
 	}
