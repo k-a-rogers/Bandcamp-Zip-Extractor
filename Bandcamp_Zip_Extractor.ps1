@@ -11,14 +11,17 @@ Function Extract-Zip {
         try {
             mkdir $location | out-Null
         } catch {
-            Write-Host "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
+			Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)"
 			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-file -Filepath $global:logfile -append
         }
     }
     if ($extractlist) {
-        Write-Host "Specific file extraction selected. Only the following files will be extracted:";$extractlist
+        Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
+		"Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)" | Out-file -Filepath $global:logfile -append
+
     } else {
-        Write-Host "Default mode selected, extracting all files..."
+        Write-Output "Default mode selected, extracting all files..."
+		"Default mode selected, extracting all files..." | Out-file -Filepath $global:logfile -append
     }
     if ((Test-Path $file) -and (Test-Path $location)) {
         # Instantiate a new shell object and namespace
@@ -31,11 +34,11 @@ Function Extract-Zip {
                 foreach ($item in $zip.items()) {
                     $shell.Namespace($location).Copyhere($item)
                 }
-                Write-Host "Finished extracting contents of $file to $location." -foregroundcolor green
+                Write-Output "Finished extracting contents of $file to $location." 
 			    "Finished extracting contents of $file to $location." | Out-file -Filepath $global:logfile -append
             } catch {
-                Write-Host "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)" -foregroundcolor red
-			    "An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-file -Filepath $global:logfile -append
+                Write-Output "An error occurred while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)"
+			    "An error occurred while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-file -Filepath $global:logfile -append
             }
         } else {
             # Extract list is set, so iterate through each name in the array and extract that file from the zip. Items in extractlist are not assumed to be unique matches, so a list of matching contents is generated for each item and a foreach loop iterates through the list, extracting each match individually.
@@ -45,34 +48,35 @@ Function Extract-Zip {
                     foreach ($l in $list) {
                         try {
                             $shell.Namespace($location).Copyhere($l)
-                            Write-Host "Extracted file $($e) successfully." -foregroundcolor green
+                            Write-Output "Extracted file $($e) successfully."
                             "Finished extracting contents of $file to $location." | Out-file -Filepath $global:logfile -append
                         } catch {
-                            Write-Host "Unable to extract file $($e), error was:`n$($_.Exception.Message)" -foregroundcolor red
+                            Write-Output "Unable to extract file $($e), error was:`n$($_.Exception.Message)"
                             "Unable to extract file $($e), error was:",$_.Exception.Message | Out-file -Filepath $global:logfile -append
                         }
                     }
                 } else {
-                    Write-Host "No file with name $($e) found in specified archive." -foregroundcolor yellow
+                    Write-Output "No file with name $($e) found in specified archive."
                     "No file with name $($e) found in specified archive." | Out-file -Filepath $global:logfile -append
                 }
 				Remove-Variable -Name list -Force -ErrorAction SilentlyContinue
             }
         }
 		if ($cleanup) {
-			Write-Host "Cleanup enabled: deleting compressed file..." -foregroundcolor Green
+			Write-Output "Cleanup enabled: deleting compressed file..."
+			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
 			Remove-Item -Path $file -Force 
 		}		
     } else {
-        Write-Host "Unable to proceed with extraction, invalid input specified!" -foregroundcolor red
+        Write-Output "Unable to proceed with extraction, invalid input specified!"
 		"Unable to proceed with extraction, invalid input specified!" | Out-file -Filepath $global:logfile -append
         if (!(Test-Path $file)) {
-            Write-Host "Could not find file $file!" -foregroundcolor red
+            Write-Output "Could not find file $file!"
 			"Could not find file $file!" | Out-file -Filepath $global:logfile -append
 			
         }
         if (!(Test-Path $location)) {
-            Write-Host "Could not find or create folder path $location!" -foregroundcolor red
+            Write-Output "Could not find or create folder path $location!"
 			"Could not find or create folder path $location!" | Out-file -Filepath $global:logfile -append
         }
     }
@@ -115,7 +119,7 @@ while (!$validpath) {
 		"Searching $($dirpath) for Zip files to extract..." | Out-file -Filepath $global:logfile -append
 		$validpath=$true
 	} catch {
-		Write-Host "Invalid path entered, please try again!"
+		Write-Output "Invalid path entered, please try again!"
 		Start-sleep 3
 	}
 	cls
