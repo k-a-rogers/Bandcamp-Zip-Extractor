@@ -93,7 +93,7 @@ Function Rename-LongTracks {
 	foreach ($t in $tracklist) {
 		$newname=$t.Name.ToString().Replace($replace,"")
 		Rename-Item -Path $t.FullName -NewName $newname
-		Remove-Variable -name newname -force
+		Remove-Variable -name newname -force -ErrorAction silentlycontinue
 	}
 	Pop-Location
 }
@@ -129,8 +129,13 @@ foreach ($zip in $zipfiles) {
 	# 3. Check if directory already exists and is populated with mp3s
 	if (Test-Path ($zip.Fullname -replace ".zip","")) {
 		if ((Gci -path ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
-			[boolean]$done=$true
-			"File $($zip.Fullname) appears to have already been extracted." | Out-file -Filepath $global:logfile -append
+			$repeat=Read-Host -Prompt "File $($zip.Fullname) has already been extracted, repeat? Y/N"
+			if ($repeat -eq "N") {
+				[boolean]$done=$true
+				"File $($zip.Fullname) has already been extracted and user selected not to repeat." | Out-file -Filepath $global:logfile -append
+			} else {
+				[boolean]$done=$false
+			}
 		}
 	}
 	if (!$done) {
@@ -140,7 +145,7 @@ foreach ($zip in $zipfiles) {
 			if ($newname -match "^ ") {
 				$newname=$newname.TrimStart(" ")
 			}
-			#"Renaming $($zip.Name) to $($newname)..." | Out-file -Filepath $global:logfile -append
+			"Renaming $($zip.Name) to $($newname)..." | Out-file -Filepath $global:logfile -append
 			rename-item -Path $zip.fullname -NewName $newname
 		}
 		
@@ -148,11 +153,12 @@ foreach ($zip in $zipfiles) {
 		if ($newname) {
 			[string]$source=$zip.Directory.ToString()+"\"+$newname
 			[string]$target=$zip.Directory.ToString()+"\"+$($newname -replace ".zip","")
+			Remove-Variable -name newname -force -Erroraction silentlycontinue
 		} else {
 			[string]$source=$zip.FullName
 			[string]$target=($zip.FullName -replace ".zip","")
 		}
-		Remove-Variable -name newname -force
+
 		Extract-Zip -file $source -location $target -cleanup $true
 		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
@@ -178,20 +184,26 @@ foreach ($zip in $zipfiles) {
 
 # 7. Copy files to remote location e.g. music player
 $playerpath=Read-Host -Prompt "Enter full path of directory where extracted files should be copied. Press Enter to skip"
-if (Test-path $playerpath) {
-	$folders=GCI -path $dirpath -Recurse | ? {$_.Mode -match "^d" -and $_.CreationTime -gt ((get-Date).AddDays(-1))} | Sort-Object -Property Fullname
-	$dirmatch=($dirpath -replace "\\","\\") -replace ":","\:"
-	foreach ($folder in $folders) {
-		$destination=$folder.FullName -replace $dirmatch,$playerpath
-		if (!(Test-Path $destination)) {
-			New-Item -Type Directory -Path $destination
-		}
-		$files=Gci -Path $folder.Fullname -filter "*.mp3"
-		if ($files) {
-			foreach ($file in Gci -Path $folder.Fullname) {
-				Copy-Item -Path $file.Fullname -Destination $destination
+if ($playerpath -ne "") {
+	try {
+		Test-Path -Path $playerpath -ErrorAction Stop
+		Write-Output "Target directory found."
+		$folders=GCI -path $dirpath -Recurse | ? {$_.Mode -match "^d" -and $_.CreationTime -gt ((get-Date).AddDays(-1))} | Sort-Object -Property Fullname
+		$dirmatch=($dirpath -replace "\\","\\") -replace ":","\:"
+		foreach ($folder in $folders) {
+			$destination=$folder.FullName -replace $dirmatch,$playerpath
+			if (!(Test-Path $destination)) {
+				New-Item -Type Directory -Path $destination
 			}
+			$files=Gci -Path $folder.Fullname -filter "*.mp3"
+			if ($files) {
+				foreach ($file in Gci -Path $folder.Fullname) {
+					Copy-Item -Path $file.Fullname -Destination $destination
+				}
+			}
+			Remove-Variable -name destination,files -force -erroraction silentlycontinue
 		}
-		Remove-Variable -name destination,files -force -erroraction silentlycontinue
+	} catch {
+		Write-Output "Target directory $($playerpath) could not be found!"
 	}
 }
