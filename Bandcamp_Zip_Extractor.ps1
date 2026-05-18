@@ -9,10 +9,10 @@ Function Extract-Zip {
     )
     if (!(Test-Path $location)) {
         try {
-            New-Item -ItemType "Directory" -Path $location | out-Null
+            New-Item -ItemType "Directory" -Path $location | Out-Null
         } catch {
             Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
-			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-file -Filepath $global:logfile -append
+			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
         }
     }
     if ($extractlist) {
@@ -32,10 +32,10 @@ Function Extract-Zip {
                     $shell.Namespace($location).Copyhere($item)
                 }
                 Write-Host "Finished extracting contents of $file to $location." -foregroundcolor green
-			    "Finished extracting contents of $file to $location." | Out-file -Filepath $global:logfile -append
+			    "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
             } catch {
                 Write-Host "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)" -foregroundcolor red
-			    "An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-file -Filepath $global:logfile -append
+			    "An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
             }
         } else {
             # Extract list is set, so iterate through each name in the array and extract that file from the zip. Items in extractlist are not assumed to be unique matches, so a list of matching contents is generated for each item and a foreach loop iterates through the list, extracting each match individually.
@@ -46,15 +46,15 @@ Function Extract-Zip {
                         try {
                             $shell.Namespace($location).Copyhere($l)
                             Write-Host "Extracted file $($e) successfully." -foregroundcolor green
-                            "Finished extracting contents of $file to $location." | Out-file -Filepath $global:logfile -append
+                            "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
                         } catch {
                             Write-Host "Unable to extract file $($e), error was:`n$($_.Exception.Message)" -foregroundcolor red
-                            "Unable to extract file $($e), error was:",$_.Exception.Message | Out-file -Filepath $global:logfile -append
+                            "Unable to extract file $($e), error was:",$_.Exception.Message | Out-File -Filepath $global:logfile -append
                         }
                     }
                 } else {
                     Write-Host "No file with name $($e) found in specified archive." -foregroundcolor yellow
-                    "No file with name $($e) found in specified archive." | Out-file -Filepath $global:logfile -append
+                    "No file with name $($e) found in specified archive." | Out-File -Filepath $global:logfile -append
                 }
 				Remove-Variable -Name list -Force -ErrorAction SilentlyContinue
             }
@@ -65,15 +65,15 @@ Function Extract-Zip {
 		}		
     } else {
         Write-Host "Unable to proceed with extraction, invalid input specified!" -foregroundcolor red
-		"Unable to proceed with extraction, invalid input specified!" | Out-file -Filepath $global:logfile -append
+		"Unable to proceed with extraction, invalid input specified!" | Out-File -Filepath $global:logfile -append
         if (!(Test-Path $file)) {
             Write-Host "Could not find file $file!" -foregroundcolor red
-			"Could not find file $file!" | Out-file -Filepath $global:logfile -append
+			"Could not find file $file!" | Out-File -Filepath $global:logfile -append
 			
         }
         if (!(Test-Path $location)) {
             Write-Host "Could not find or create folder path $location!" -foregroundcolor red
-			"Could not find or create folder path $location!" | Out-file -Filepath $global:logfile -append
+			"Could not find or create folder path $location!" | Out-File -Filepath $global:logfile -append
         }
     }
 }
@@ -104,7 +104,7 @@ Function Rename-LongTracks {
 # Main script body
 $scriptroot=Split-Path -parent $MyInvocation.MyCommand.Definition
 $global:logfile=$scriptroot+"\"+(Get-Date -format 'yyyy_MM_dd_HHmm')+"_Bandcamp_Zip_Extractor.log"
-"$(Get-Date -Format 'yyyy-MM-dd HH:mm'): Bandcamp Zip Extractor" | Out-file -Filepath $global:logfile
+"$(Get-Date -Format 'yyyy-MM-dd HH:mm'): Bandcamp Zip Extractor" | Out-File -Filepath $global:logfile
 
 # 1. Prompt for location to search for zip files.
 [boolean]$validpath=$false
@@ -112,15 +112,15 @@ while (!$validpath) {
 	$dirpath=Read-Host -Prompt "Enter top-level path to check for zipfiles"
 	try {
 		Test-Path $dirpath -ErrorAction Stop
-		"Searching $($dirpath) for Zip files to extract..." | Out-file -Filepath $global:logfile -append
+		"Searching $($dirpath) for Zip files to extract..." | Out-File -Filepath $global:logfile -append
 		$validpath=$true
 	} catch {
 		Write-Host "Invalid path entered, please try again!"
-		Start-sleep 3
+		Start-Sleep 3
 	}
 	cls
 }
-Remove-variable -name validpath -force
+Remove-Variable -name validpath -force
 
 $zipfiles=Get-ChildItem -Recurse -Path $dirpath -Filter "*.zip"
 
@@ -130,7 +130,7 @@ foreach ($zip in $zipfiles) {
 	if (Test-Path ($zip.Fullname -replace ".zip","")) {
 		if ((Get-ChildItem -path ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
 			[boolean]$done=$true
-			"File $($zip.Fullname) appears to have already been extracted." | Out-file -Filepath $global:logfile -append
+			"File $($zip.Fullname) appears to have already been extracted." | Out-File -Filepath $global:logfile -append
 		}
 	}
 	if (!$done) {
@@ -140,8 +140,8 @@ foreach ($zip in $zipfiles) {
 			if ($newname -match "^ ") {
 				$newname=$newname.TrimStart(" ")
 			}
-			#"Renaming $($zip.Name) to $($newname)..." | Out-file -Filepath $global:logfile -append
-			rename-item -Path $zip.fullname -NewName $newname
+			#"Renaming $($zip.Name) to $($newname)..." | Out-File -Filepath $global:logfile -append
+			Rename-Item -Path $zip.fullname -NewName $newname
 		}
 		
 		# 5. Extract zip file to new folder in same location
@@ -167,10 +167,10 @@ foreach ($zip in $zipfiles) {
 			if (($sample.Name -replace $prefix,"") -match "^ ") {
 				$prefix+=" "
 			}
-			"Renaming files in directory $($target) to remove prefix $($prefix)..." | Out-file -Filepath $global:logfile -append
+			"Renaming files in directory $($target) to remove prefix $($prefix)..." | Out-File -Filepath $global:logfile -append
 			Rename-LongTracks -location $target -replace $prefix
 		}
-		"All actions for file $($zip.Fullname) complete." | Out-file -Filepath $global:logfile -append
+		"All actions for file $($zip.Fullname) complete." | Out-File -Filepath $global:logfile -append
 	} else {
 		Remove-Variable -Name done -force
 	}
