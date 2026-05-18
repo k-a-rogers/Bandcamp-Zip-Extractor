@@ -11,7 +11,7 @@ Function Extract-Zip {
         try {
             New-Item -ItemType "Directory" -Path $location | out-Null
         } catch {
-            Write-Host "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
+            Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
 			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-file -Filepath $global:logfile -append
         }
     }
@@ -89,7 +89,7 @@ Function Rename-LongTracks {
 	}
 	Push-Location
 	Set-Location $location
-	$tracklist=Gci -Filter "*.mp3"
+	$tracklist=Get-ChildItem -Filter "*.mp3"
 	foreach ($t in $tracklist) {
 		$Newname=$t.Name.ToString().Replace($replace,"")
 		Rename-Item -Path $t.FullName -NewName $newname
@@ -122,13 +122,13 @@ while (!$validpath) {
 }
 Remove-variable -name validpath -force
 
-$zipfiles=GCI -Recurse -Path $dirpath -Filter "*.zip"
+$zipfiles=Get-ChildItem -Recurse -Path $dirpath -Filter "*.zip"
 
 # 2. Iterate through found files.
 foreach ($zip in $zipfiles) {
 	# 3. Check if directory already exists and is populated with mp3s
 	if (Test-Path ($zip.Fullname -replace ".zip","")) {
-		if ((Gci -path ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
+		if ((Get-ChildItem -path ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
 			[boolean]$done=$true
 			"File $($zip.Fullname) appears to have already been extracted." | Out-file -Filepath $global:logfile -append
 		}
@@ -156,7 +156,7 @@ foreach ($zip in $zipfiles) {
 		Extract-Zip -file $source -location $target -cleanup $true
 		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
-		$sample=(GCI -path $target -Filter "*.mp3")[0]
+		$sample=(Get-ChildItem -path $target -Filter "*.mp3")[0]
 		$count=($sample.Name -split "-").count
 		if ($count -gt 1) {
 			[string]$prefix=""
