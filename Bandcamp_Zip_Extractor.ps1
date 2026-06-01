@@ -11,12 +11,12 @@ Function Extract-Zip {
         try {
             New-Item -ItemType "Directory" -Path $location | Out-Null
         } catch {
-            Write-Output -Message "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
+            Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
 			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
         }
     }
     if ($extractlist) {
-        Write-Output -Message "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
+        Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
         "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)" | Out-File -Filepath $global:logfile -append
     } else {
         $shell=New-Object -com Shell.Application
@@ -28,7 +28,7 @@ Function Extract-Zip {
                 foreach ($item in $zip.items()) {
                     $shell.Namespace($location).Copyhere($item)
                 }
-                Write-Output -Message "Finished extracting contents of $file to $location."
+                Write-Output "Finished extracting contents of $file to $location."
 			    "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
             } catch {
                 Write-Error -Message "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)"
@@ -42,7 +42,7 @@ Function Extract-Zip {
                     foreach ($l in $list) {
                         try {
                             $shell.Namespace($location).Copyhere($l)
-                            Write-Output -Message "Extracted file $($e) successfully."
+                            Write-Output "Extracted file $($e) successfully."
                             "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
                         } catch {
                             Write-Error -Message "Unable to extract file $($e), error was:`n$($_.Exception.Message)"
@@ -57,7 +57,7 @@ Function Extract-Zip {
             }
         }
 		if ($cleanup) {
-			Write-Output -Message "Cleanup enabled: deleting compressed file..."
+			Write-Output "Cleanup enabled: deleting compressed file..."
 			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
 			Remove-Item -Path $file -Force 
 		}		
