@@ -16,12 +16,8 @@ Function Extract-Zip {
         }
     }
     if ($extractlist) {
-        Write-Host "Specific file extraction selected. Only the following files will be extracted:";$extractlist
+        Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
     } else {
-        Write-Host "Default mode selected, extracting all files..."
-    }
-    if ((Test-Path $file) -and (Test-Path $location)) {
-        # Instantiate a new shell object and namespace
         $shell=New-Object -com Shell.Application
         $zip=$shell.NameSpace($file)
         # Check if the $extractlist parameter is set, and extract files accordingly.
@@ -31,7 +27,7 @@ Function Extract-Zip {
                 foreach ($item in $zip.items()) {
                     $shell.Namespace($location).Copyhere($item)
                 }
-                Write-Host "Finished extracting contents of $file to $location." -foregroundcolor green
+                Write-Output "Finished extracting contents of $file to $location."
 			    "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
             } catch {
                 Write-Host "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)" -foregroundcolor red
@@ -45,7 +41,7 @@ Function Extract-Zip {
                     foreach ($l in $list) {
                         try {
                             $shell.Namespace($location).Copyhere($l)
-                            Write-Host "Extracted file $($e) successfully." -foregroundcolor green
+                            Write-Output "Extracted file $($e) successfully."
                             "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
                         } catch {
                             Write-Host "Unable to extract file $($e), error was:`n$($_.Exception.Message)" -foregroundcolor red
@@ -60,7 +56,7 @@ Function Extract-Zip {
             }
         }
 		if ($cleanup) {
-			Write-Host "Cleanup enabled: deleting compressed file..." -foregroundcolor Green
+			Write-Output "Cleanup enabled: deleting compressed file..."
 			Remove-Item -Path $file -Force 
 		}		
     } else {
