@@ -145,11 +145,12 @@ foreach ($zip in $zipfiles) {
 		if ($newname) {
 			[string]$source=$zip.Directory.ToString()+"\"+$newname
 			[string]$target=$zip.Directory.ToString()+"\"+$($newname -replace ".zip","")
+			Remove-Variable -name newname -force
 		} else {
 			[string]$source=$zip.FullName
 			[string]$target=($zip.FullName -replace ".zip","")
 		}
-		Remove-Variable -name newname -force
+
 		Extract-Zip -file $source -location $target -cleanup $true
 		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
