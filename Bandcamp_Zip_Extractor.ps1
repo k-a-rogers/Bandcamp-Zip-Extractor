@@ -137,7 +137,7 @@ foreach ($zip in $zipfiles) {
 			if ($newname -match "^ ") {
 				$newname=$newname.TrimStart(" ")
 			}
-			#"Renaming $($zip.Name) to $($newname)..." | Out-File -Filepath $global:logfile -append
+			"Renaming $($zip.Name) to $($newname)..." | Out-File -Filepath $global:logfile -append
 			Rename-Item -Path $zip.fullname -NewName $newname
 		}
 		
