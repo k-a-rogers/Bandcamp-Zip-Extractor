@@ -132,8 +132,8 @@ foreach ($zip in $zipfiles) {
 	}
 	if (!$done) {
 		# 4. Check for dash in filename, rename if found.
-		if ($zip.name -match "-") {
-			$newname=($zip.Name -split "-")[1]
+		if ($zip.name -match " - ") {
+			$newname=($zip.Name -split " - ")[1]
 			if ($newname -match "^ ") {
 				$newname=$newname.TrimStart(" ")
 			}
