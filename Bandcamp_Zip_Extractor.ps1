@@ -57,6 +57,7 @@ Function Extract-Zip {
         }
 		if ($cleanup) {
 			Write-Output -Message "Cleanup enabled: deleting compressed file..."
+			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
 			Remove-Item -Path $file -Force 
 		}		
     } else {
