@@ -17,6 +17,7 @@ Function Extract-Zip {
     }
     if ($extractlist) {
         Write-Output -Message "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
+        "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)" | Out-File -Filepath $global:logfile -append
     } else {
         $shell=New-Object -com Shell.Application
         $zip=$shell.NameSpace($file)
