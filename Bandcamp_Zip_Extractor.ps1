@@ -156,7 +156,7 @@ foreach ($zip in $zipfiles) {
 		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
 		$sample=(Get-ChildItem-LiteralPath path $target -Filter "*.mp3")[0]
-		$count=($sample.Name -split "-").count
+		$count=($sample.Name -split " - ").count
 		if ($count -gt 1) {
 			[string]$prefix=""
 			for ($i=0;$i -lt $($count -1); $i++) {
