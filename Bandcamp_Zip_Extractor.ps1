@@ -35,7 +35,8 @@ Function Extract-Zip {
 			    "An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
             }
         } else {
-            # Extract list is set, so iterate through each name in the array and extract that file from the zip. Items in extractlist are not assumed to be unique matches, so a list of matching contents is generated for each item and a foreach loop iterates through the list, extracting each match individually.
+            # Extract list is set, so iterate through each name in the array and extract that file from the zip. Items in extractlist are not assumed to be unique matches, `
+			# so a list of matching contents is generated for each item and a foreach loop iterates through the list, extracting each match individually.
             foreach ($e in $extractlist) {
                 $list=@($zip.Items() | Where-Object {$_.Name -like $e})
                 if ($list) {
