@@ -107,6 +107,66 @@ Function Rename-LongTracks {
 	Pop-Location
 }
 
+Function Load-DLL {
+	[boolean]$global:loaded = $false
+	while (!$loaded) {
+		if ($dllpath) {
+			try {
+				[System.Reflection.Assembly]::LoadFile("$($dllpath)\taglib-sharp.dll")
+				$global:loaded=$true
+			} catch {
+				Write-Output "Couldn't load DLL from $($dllpath)!"
+				"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+			}
+		} else {
+			if (Test-Path -Path "$PSScriptRoot\taglib-sharp.dll") {
+				$dllpath = $PSScriptRoot+"\taglib-sharp.dll"
+				try {
+					[System.Reflection.Assembly]::LoadFile("$dllpath") | Out-Null
+					[boolean]$global:loaded = $true
+				} catch {
+					Write-Output "Couldn't load DLL from $($dllpath)!"
+					"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+				}
+			} else {
+				$PF = Get-ChildItem -LiteralPath $env:programfiles -Directory -Filter "*taglib-sharp*"
+				if ($PF) {
+					$dllpath = (Get-ChildItem -LiteralPath $PF.Fullname | Where-Object -FilterScript {$_.Name -like "taglib-sharp.dll"}).FullName
+					if ($dllpath) {
+						try {
+							[System.Reflection.Assembly]::LoadFile("$($dllpath)") | Out-Null
+							$global:loaded = $true
+						} catch {
+							Write-Output "Couldn't load DLL from $($dllpath)!"
+							"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+						}
+					} else {
+						Write-Output "Could not find required DLL in $($PF.Fullname)"
+						"Could not find required DLL in $($PF.Fullname)" | Out-File -Filepath $global:logfile -append
+					}
+				}
+				$PFx86 = Get-ChildItem -LiteralPath ${env:programfiles(x86)} -Directory -Filter "*taglib-sharp*"
+				if ($PFx86) {
+					$dllpath = (Get-ChildItem -LiteralPath $PFx86.Fullname -Recurse | Where-Object {$_.Name -like "taglib-sharp.dll"}).FullName
+					if ($dllpath) {
+						try {
+							[System.Reflection.Assembly]::LoadFile("$($dllpath)") | Out-Null
+							$global:loaded=$true
+						} catch {
+							Write-Output "Couldn't load DLL from $($dllpath)!"
+							"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+						}
+					} else {
+						Write-Output "Could not find required DLL in $($PFx86.Fullname)"
+						"Could not find required DLL in $($PFx86.Fullname)" | Out-File -Filepath $global:logfile -append					
+					}
+				}
+			}
+		}
+		break;
+	}
+}
+
 # Main body
 
 # 0. Set up logfile
