@@ -9,7 +9,7 @@ Function Extract-Zip {
     )
     if (!(Test-Path -LiteralPath $location)) {
         try {
-            New-Item -ItemType "Directory" -LiteralPath $location | Out-Null
+            New-Item -ItemType "Directory" -Path $location | Out-Null
         } catch {
             Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
 			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
