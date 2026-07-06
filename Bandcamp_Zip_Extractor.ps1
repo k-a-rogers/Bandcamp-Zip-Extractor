@@ -1,4 +1,11 @@
-# Function declaration
+param(
+	[parameter(mandatory=$false)]
+	[boolean]$updatemetadata = $false,
+	[parameter(mandatory=$false)]
+	[boolean]$cleanup = $false,
+	[parameter(mandatory=$false)]
+	[boolean]$overwrite = $false
+)
 
 Function Extract-Zip {
     param(
