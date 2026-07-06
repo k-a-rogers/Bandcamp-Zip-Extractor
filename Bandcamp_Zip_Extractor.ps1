@@ -163,8 +163,7 @@ foreach ($zip in $zipfiles) {
 			[string]$target=($zip.FullName -replace ".zip","")
 		}
 
-		Extract-Zip -file $source -location $target -cleanup $true
-		
+		Extract-Zip -file $source -location $target -cleanup $cleanup		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
 		$sample=(Get-ChildItem -LiteralPath $target -Filter "*.mp3")[0]
 		$count=($sample.Name -split " - ").count
