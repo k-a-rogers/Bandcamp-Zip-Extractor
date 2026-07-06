@@ -15,48 +15,51 @@ Function Extract-Zip {
 			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
         }
     }
-    if ($extractlist) {
-        Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
-        "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)" | Out-File -Filepath $global:logfile -append
-    } else {
-        $shell=New-Object -com Shell.Application
-        $zip=$shell.NameSpace($file)
-        # Check if the $extractlist parameter is set, and extract files accordingly.
-        if (!$extractlist) {
-            # Extract list is not set so default to extracting all files.
-            try {
-                foreach ($item in $zip.items()) {
-                    $shell.Namespace($location).Copyhere($item)
-                }
-                Write-Output "Finished extracting contents of $file to $location."
-			    "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
-            } catch {
-                Write-Error -Message "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)"
-			    "An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
-            }
-        } else {
-            # Extract list is set, so iterate through each name in the array and extract that file from the zip. Items in extractlist are not assumed to be unique matches, `
-			# so a list of matching contents is generated for each item and a foreach loop iterates through the list, extracting each match individually.
-            foreach ($e in $extractlist) {
-                $list=@($zip.Items() | Where-Object {$_.Name -like $e})
-                if ($list) {
-                    foreach ($l in $list) {
-                        try {
-                            $shell.Namespace($location).Copyhere($l)
-                            Write-Output "Extracted file $($e) successfully."
-                            "Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
-                        } catch {
-                            Write-Error -Message "Unable to extract file $($e), error was:`n$($_.Exception.Message)"
-                            "Unable to extract file $($e), error was:",$_.Exception.Message | Out-File -Filepath $global:logfile -append
-                        }
-                    }
-                } else {
-                    Write-Warning -Message "No file with name $($e) found in specified archive."
-                    "No file with name $($e) found in specified archive." | Out-File -Filepath $global:logfile -append
-                }
+
+    if ((Test-Path -LiteralPath $file) -and (Test-Path -LiteralPath $location)) {
+		if ($extractlist) {
+			Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
+			"Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)" | Out-File -Filepath $global:logfile -append
+
+			$shell=New-Object -com Shell.Application
+			$zip=$shell.NameSpace($file)
+
+			foreach ($e in $extractlist) {
+				$list=@($zip.Items() | Where-Object {$_.Name -like $e})
+				if ($list) {
+					foreach ($l in $list) {
+						try {
+							$shell.Namespace($location).Copyhere($l)
+							Write-Output "Extracted file $($e) successfully."
+							"Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
+						} catch {
+							Write-Error -Message "Unable to extract file $($e), error was:`n$($_.Exception.Message)"
+							"Unable to extract file $($e), error was:",$_.Exception.Message | Out-File -Filepath $global:logfile -append
+						}
+					}
+				} else {
+					Write-Warning -Message "No file with name $($e) found in specified archive."
+					"No file with name $($e) found in specified archive." | Out-File -Filepath $global:logfile -append
+				}
 				Remove-Variable -Name list -Force -ErrorAction SilentlyContinue
-            }
-        }
+			}
+		} else {
+			Write-Output "Default mode selected, extracting all files..."
+			"Default mode selected, extracting all files..." | Out-File -Filepath $global:logfile -append
+
+			$shell=New-Object -com Shell.Application
+			$zip=$shell.NameSpace($file)
+			try {
+				foreach ($item in $zip.items()) {
+					$shell.Namespace($location).Copyhere($item)
+				}
+				Write-Output "Finished extracting contents of $file to $location."
+				"Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
+			} catch {
+				Write-Error -Message "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)"
+				"An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
+			}
+		}
 		if ($cleanup) {
 			Write-Output "Cleanup enabled: deleting compressed file..."
 			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
