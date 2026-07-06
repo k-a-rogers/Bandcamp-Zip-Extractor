@@ -7,9 +7,9 @@ Function Extract-Zip {
         [array]$extractlist,
         [boolean]$cleanup=$false
     )
-    if (!(Test-Path $location)) {
+    if (!(Test-Path -LiteralPath $location)) {
         try {
-            New-Item -ItemType "Directory" -Path $location | Out-Null
+            New-Item -ItemType "Directory" -LiteralPath $location | Out-Null
         } catch {
             Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
 			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
@@ -59,17 +59,17 @@ Function Extract-Zip {
 		if ($cleanup) {
 			Write-Output "Cleanup enabled: deleting compressed file..."
 			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
-			Remove-Item -Path $file -Force 
+			Remove-Item -LiteralPath $file -Force 
 		}		
     } else {
         Write-Error -Message "Unable to proceed with extraction, invalid input specified!"
 		"Unable to proceed with extraction, invalid input specified!" | Out-File -Filepath $global:logfile -append
-        if (!(Test-Path $file)) {
+        if (!(Test-Path -LiteralPath $file)) {
             Write-Error -Message "Could not find file $file!"
 			"Could not find file $file!" | Out-File -Filepath $global:logfile -append
 			
         }
-        if (!(Test-Path $location)) {
+        if (!(Test-Path -LiteralPath $location)) {
             Write-Error -Message "Could not find or create folder path $location!"
 			"Could not find or create folder path $location!" | Out-File -Filepath $global:logfile -append
         }
@@ -86,11 +86,11 @@ Function Rename-LongTracks {
 		$replace=Read-Host("Type the string to be removed from the track names")
 	}
 	Push-Location
-	Set-Location $location
-	$tracklist=Get-ChildItem -Filter "*.mp3"
+	Set-Location -LiteralPath $location
+	$tracklist=Get-ChildItem -Literalpath . -Filter "*.mp3"
 	foreach ($t in $tracklist) {
 		$Newname=$t.Name.ToString().Replace($replace,"")
-		Rename-Item -Path $t.FullName -NewName $newname
+		Rename-Item -LiteralPath $t.FullName -NewName $newname
 		Remove-Variable -name newname -force
 	}
 	Pop-Location
@@ -120,13 +120,13 @@ while (!$validpath) {
 }
 Remove-Variable -name validpath -force
 
-$zipfiles=Get-ChildItem -Recurse -Path $dirpath -Filter "*.zip"
+$zipfiles=Get-ChildItem -Recurse -LiteralPath $dirpath -Filter "*.zip"
 
 # 2. Iterate through found files.
 foreach ($zip in $zipfiles) {
 	# 3. Check if directory already exists and is populated with mp3s
 	if (Test-Path ($zip.Fullname -replace ".zip","")) {
-		if ((Get-ChildItem -path ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
+		if ((Get-ChildItem -LiteralPath ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
 			[boolean]$done=$true
 			"File $($zip.Fullname) appears to have already been extracted." | Out-File -Filepath $global:logfile -append
 		}
@@ -139,7 +139,7 @@ foreach ($zip in $zipfiles) {
 				$newname=$newname.TrimStart(" ")
 			}
 			"Renaming $($zip.Name) to $($newname)..." | Out-File -Filepath $global:logfile -append
-			Rename-Item -Path $zip.fullname -NewName $newname
+			Rename-Item -LiteralPath $zip.fullname -NewName $newname
 		}
 		
 		# 5. Extract zip file to new folder in same location
@@ -155,7 +155,7 @@ foreach ($zip in $zipfiles) {
 		Extract-Zip -file $source -location $target -cleanup $true
 		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
-		$sample=(Get-ChildItem -path $target -Filter "*.mp3")[0]
+		$sample=(Get-ChildItem-LiteralPath path $target -Filter "*.mp3")[0]
 		$count=($sample.Name -split "-").count
 		if ($count -gt 1) {
 			[string]$prefix=""
