@@ -163,6 +163,10 @@ Function Load-DLL {
 				}
 			}
 		}
+		if (-not $global:loaded) {
+			Write-Output "Taglib-Sharp library could not be found on local system. Please refer to https://github.com/mono/taglib-sharp for more information."
+			"Taglib-Sharp library could not be found on local system. Please refer to https://github.com/mono/taglib-sharp for more information." | Out-File -Filepath $global:logfile -append
+		}
 		break;
 	}
 }
