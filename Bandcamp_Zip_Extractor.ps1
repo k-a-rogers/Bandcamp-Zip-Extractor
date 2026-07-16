@@ -1,10 +1,10 @@
 param(
 	[parameter(mandatory=$false)]
-	[boolean]$updatemetadata = $false,
+	[boolean]$UpdateMetadata = $false,
 	[parameter(mandatory=$false)]
-	[boolean]$cleanup = $false,
+	[boolean]$Cleanup = $false,
 	[parameter(mandatory=$false)]
-	[boolean]$overwrite = $false
+	[boolean]$Overwrite = $false
 )
 
 Function Extract-Zip {
@@ -12,7 +12,7 @@ Function Extract-Zip {
         [string]$file,
         [string]$location,
         [array]$extractlist,
-        [boolean]$cleanup=$false
+        [boolean]$Cleanup=$false
     )
     if (!(Test-Path -LiteralPath $location)) {
         try {
@@ -67,7 +67,7 @@ Function Extract-Zip {
 				"An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
 			}
 		}
-		if ($cleanup) {
+		if ($Cleanup) {
 			Write-Output "Cleanup enabled: deleting compressed file..."
 			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
 			Remove-Item -LiteralPath $file -Force 
@@ -227,7 +227,7 @@ foreach ($zip in $zipfiles) {
 			[string]$target=($zip.FullName -replace ".zip","")
 		}
 
-		Extract-Zip -file $source -location $target -cleanup $cleanup		
+		Extract-Zip -file $source -location $target -cleanup $Cleanup		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
 		$sample=(Get-ChildItem -LiteralPath $target -Filter "*.mp3")[0]
 		$count=($sample.Name -split " - ").count
