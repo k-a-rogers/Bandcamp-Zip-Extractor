@@ -286,3 +286,33 @@ foreach ($Zip in $ZipFiles) {
 		Remove-Variable -Name done -force
 	}
 }
+
+# Copy files to secondary location e.g. network share, portable music player
+
+$RemotePath = Read-Host -Prompt "Enter full path of directory where files should be copied. Press Enter to skip"
+if ($null -ne $RemotePath) {
+	try {
+		Test-Path -Path $RemotePath -ErrorAction Stop
+		Write-Output "Target directory $($RemotePath) found."
+		"Target directory $($RemotePath) found." | Out-File -Filepath $global:logfile -append
+		$Folders = Get-ChildItem -Path $DirPath -Recurse | Where-Object -FilterScript {$_.Mode -Match "^d" -and {$_.CreationTime -gt ((Get-Date).AddDays(-1))}} | `
+		Sort-Object -Property FullName
+		$DirMatch = ($DirPath -replace "\\","\\") -replace ":","\:"
+		foreach ($Folder in $Folders) {
+			$Destination = $Folder.FullName -replace $DirMatch,$RemotePath
+			if (-not (Test-Path $Destination)) {
+				New-Item -Type Directory -Path $Destination
+			}
+			$Files = Get-ChildItem -Path $Folder.Fullname -Filter "*.mp3"
+			if ($Files) {
+				foreach ($File in $Files) {
+					Copy-Item -Path $File.FullName -Destination $Destination
+				}
+			}
+			Remove-Variable -Name Destination,Files -Force -ErrorAction SilentlyContinue
+		}
+	} catch {
+		Write-Output "Target directory $($RemotePath) not found!"
+		"Target directory $($RemotePath) not found!" | Out-File -Filepath $global:logfile -append
+	}
+}
