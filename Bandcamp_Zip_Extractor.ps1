@@ -9,136 +9,136 @@ param(
 
 Function Extract-Zip {
     param(
-        [string]$file,
-        [string]$location,
-        [array]$extractlist,
+        [string]$File,
+        [string]$Location,
+        [array]$ExtractList,
         [boolean]$Cleanup=$false
     )
-    if (!(Test-Path -LiteralPath $location)) {
+    if (!(Test-Path -LiteralPath $Location)) {
         try {
-            New-Item -ItemType "Directory" -Path $location | Out-Null
+            New-Item -ItemType "Directory" -Path $Location | Out-Null
         } catch {
-            Write-Output "Unable to create folder $location, error was:`n$($_.Exception.Message)" -foregroundcolor red
-			"Unable to create folder $location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
+            Write-Output "Unable to create folder $Location, error was:`n$($_.Exception.Message)" -foregroundcolor red
+			"Unable to create folder $Location, error was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
         }
     }
 
-    if ((Test-Path -LiteralPath $file) -and (Test-Path -LiteralPath $location)) {
-		if ($extractlist) {
-			Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)"
-			"Specific file extraction selected. Only the following files will be extracted:`n$($extractlist)" | Out-File -Filepath $global:logfile -append
+    if ((Test-Path -LiteralPath $File) -and (Test-Path -LiteralPath $Location)) {
+		if ($ExtractList) {
+			Write-Output "Specific file extraction selected. Only the following files will be extracted:`n$($ExtractList)"
+			"Specific file extraction selected. Only the following files will be extracted:`n$($ExtractList)" | Out-File -Filepath $global:logfile -append
 
-			$shell=New-Object -com Shell.Application
-			$zip=$shell.NameSpace($file)
+			$Shell=New-Object -com Shell.Application
+			$Zip=$Shell.NameSpace($File)
 
-			foreach ($e in $extractlist) {
-				$list=@($zip.Items() | Where-Object {$_.Name -like $e})
-				if ($list) {
-					foreach ($l in $list) {
+			foreach ($E in $ExtractList) {
+				$List=@($Zip.Items() | Where-Object {$_.Name -like $E})
+				if ($List) {
+					foreach ($L in $List) {
 						try {
-							$shell.Namespace($location).Copyhere($l)
-							Write-Output "Extracted file $($e) successfully."
-							"Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
+							$Shell.Namespace($Location).Copyhere($L)
+							Write-Output "Extracted file $($E) successfully."
+							"Finished extracting contents of $File to $Location." | Out-File -Filepath $global:logfile -append
 						} catch {
-							Write-Error -Message "Unable to extract file $($e), error was:`n$($_.Exception.Message)"
-							"Unable to extract file $($e), error was:",$_.Exception.Message | Out-File -Filepath $global:logfile -append
+							Write-Error -Message "Unable to extract file $($E), error was:`n$($_.Exception.Message)"
+							"Unable to extract file $($E), error was:",$_.Exception.Message | Out-File -Filepath $global:logfile -append
 						}
 					}
 				} else {
-					Write-Warning -Message "No file with name $($e) found in specified archive."
-					"No file with name $($e) found in specified archive." | Out-File -Filepath $global:logfile -append
+					Write-Warning -Message "No file with name $($E) found in specified archive."
+					"No file with name $($E) found in specified archive." | Out-File -Filepath $global:logfile -append
 				}
-				Remove-Variable -Name list -Force -ErrorAction SilentlyContinue
+				Remove-Variable -Name List -Force -ErrorAction SilentlyContinue
 			}
 		} else {
 			Write-Output "Default mode selected, extracting all files..."
 			"Default mode selected, extracting all files..." | Out-File -Filepath $global:logfile -append
 
-			$shell=New-Object -com Shell.Application
-			$zip=$shell.NameSpace($file)
+			$Shell=New-Object -com Shell.Application
+			$Zip=$Shell.NameSpace($File)
 			try {
-				foreach ($item in $zip.items()) {
-					$shell.Namespace($location).Copyhere($item)
+				foreach ($Item in $Zip.items()) {
+					$Shell.Namespace($Location).Copyhere($Item)
 				}
-				Write-Output "Finished extracting contents of $file to $location."
-				"Finished extracting contents of $file to $location." | Out-File -Filepath $global:logfile -append
+				Write-Output "Finished extracting contents of $File to $Location."
+				"Finished extracting contents of $File to $Location." | Out-File -Filepath $global:logfile -append
 			} catch {
-				Write-Error -Message "An error occured while extracting the contents of $file to $location; the error message was:`n$($_.Exception.Message)"
-				"An error occured while extracting the contents of $file to $location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
+				Write-Error -Message "An error occured while extracting the contents of $File to $Location; the error message was:`n$($_.Exception.Message)"
+				"An error occured while extracting the contents of $File to $Location; the error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
 			}
 		}
 		if ($Cleanup) {
 			Write-Output "Cleanup enabled: deleting compressed file..."
 			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
-			Remove-Item -LiteralPath $file -Force 
+			Remove-Item -LiteralPath $File -Force 
 		}		
     } else {
         Write-Error -Message "Unable to proceed with extraction, invalid input specified!"
 		"Unable to proceed with extraction, invalid input specified!" | Out-File -Filepath $global:logfile -append
-        if (!(Test-Path -LiteralPath $file)) {
-            Write-Error -Message "Could not find file $file!"
-			"Could not find file $file!" | Out-File -Filepath $global:logfile -append
+        if (!(Test-Path -LiteralPath $File)) {
+            Write-Error -Message "Could not find file $File!"
+			"Could not find file $File!" | Out-File -Filepath $global:logfile -append
 			
         }
-        if (!(Test-Path -LiteralPath $location)) {
-            Write-Error -Message "Could not find or create folder path $location!"
-			"Could not find or create folder path $location!" | Out-File -Filepath $global:logfile -append
+        if (!(Test-Path -LiteralPath $Location)) {
+            Write-Error -Message "Could not find or create folder path $Location!"
+			"Could not find or create folder path $Location!" | Out-File -Filepath $global:logfile -append
         }
     }
 }
 
 Function Rename-LongTracks {
 	Param(
-		[String]$location,
-		[string]$replace
+		[String]$Location,
+		[string]$Replace
 		
 	)
-	if (!$replace) {
-		$replace=Read-Host("Type the string to be removed from the track names")
+	if (-not $Replace) {
+		$Replace=Read-Host("Type the string to be removed from the track names")
 	}
 	Push-Location
-	Set-Location -LiteralPath $location
-	$tracklist=Get-ChildItem -Literalpath . -Filter "*.mp3"
-	foreach ($t in $tracklist) {
-		$Newname=$t.Name.ToString().Replace($replace,"")
-		Rename-Item -LiteralPath $t.FullName -NewName $newname
-		Remove-Variable -name newname -force
+	Set-Location -LiteralPath $Location
+	$TrackList=Get-ChildItem -Literalpath . -Filter "*.mp3"
+	foreach ($T in $TrackList) {
+		$NewName=$T.Name.ToString().Replace($Replace,"")
+		Rename-Item -LiteralPath $T.FullName -NewName $NewName
+		Remove-Variable -name NewName -force
 	}
 	Pop-Location
 }
 
 Function Load-DLL {
-	[boolean]$global:loaded = $false
-	while (!$loaded) {
-		if ($dllpath) {
+	[boolean]$global:Loaded = $false
+	while (-not $global:loaded) {
+		if ($DllPath) {
 			try {
-				[System.Reflection.Assembly]::LoadFile("$($dllpath)\taglib-sharp.dll")
+				[System.Reflection.Assembly]::LoadFile("$($DllPath)\taglib-sharp.dll")
 				$global:loaded=$true
 			} catch {
-				Write-Output "Couldn't load DLL from $($dllpath)!"
-				"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+				Write-Output "Couldn't load DLL from $($DllPath)!"
+				"Couldn't load DLL from $($DllPath)!" | Out-File -Filepath $global:logfile -append
 			}
 		} else {
 			if (Test-Path -Path "$PSScriptRoot\taglib-sharp.dll") {
-				$dllpath = $PSScriptRoot+"\taglib-sharp.dll"
+				$DllPath = $PSScriptRoot+"\taglib-sharp.dll"
 				try {
-					[System.Reflection.Assembly]::LoadFile("$dllpath") | Out-Null
+					[System.Reflection.Assembly]::LoadFile("$DllPath") | Out-Null
 					[boolean]$global:loaded = $true
 				} catch {
-					Write-Output "Couldn't load DLL from $($dllpath)!"
-					"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+					Write-Output "Couldn't load DLL from $($DllPath)!"
+					"Couldn't load DLL from $($DllPath)!" | Out-File -Filepath $global:logfile -append
 				}
 			} else {
 				$PF = Get-ChildItem -LiteralPath $env:programfiles -Directory -Filter "*taglib-sharp*"
 				if ($PF) {
-					$dllpath = (Get-ChildItem -LiteralPath $PF.Fullname | Where-Object -FilterScript {$_.Name -like "taglib-sharp.dll"}).FullName
-					if ($dllpath) {
+					$DllPath = (Get-ChildItem -LiteralPath $PF.Fullname | Where-Object -FilterScript {$_.Name -like "taglib-sharp.dll"}).FullName
+					if ($DllPath) {
 						try {
-							[System.Reflection.Assembly]::LoadFile("$($dllpath)") | Out-Null
+							[System.Reflection.Assembly]::LoadFile("$($DllPath)") | Out-Null
 							$global:loaded = $true
 						} catch {
-							Write-Output "Couldn't load DLL from $($dllpath)!"
-							"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+							Write-Output "Couldn't load DLL from $($DllPath)!"
+							"Couldn't load DLL from $($DllPath)!" | Out-File -Filepath $global:logfile -append
 						}
 					} else {
 						Write-Output "Could not find required DLL in $($PF.Fullname)"
@@ -147,14 +147,14 @@ Function Load-DLL {
 				}
 				$PFx86 = Get-ChildItem -LiteralPath ${env:programfiles(x86)} -Directory -Filter "*taglib-sharp*"
 				if ($PFx86) {
-					$dllpath = (Get-ChildItem -LiteralPath $PFx86.Fullname -Recurse | Where-Object {$_.Name -like "taglib-sharp.dll"}).FullName
-					if ($dllpath) {
+					$DllPath = (Get-ChildItem -LiteralPath $PFx86.Fullname -Recurse | Where-Object {$_.Name -like "taglib-sharp.dll"}).FullName
+					if ($DllPath) {
 						try {
-							[System.Reflection.Assembly]::LoadFile("$($dllpath)") | Out-Null
+							[System.Reflection.Assembly]::LoadFile("$($DllPath)") | Out-Null
 							$global:loaded=$true
 						} catch {
-							Write-Output "Couldn't load DLL from $($dllpath)!"
-							"Couldn't load DLL from $($dllpath)!" | Out-File -Filepath $global:logfile -append
+							Write-Output "Couldn't load DLL from $($DllPath)!"
+							"Couldn't load DLL from $($DllPath)!" | Out-File -Filepath $global:logfile -append
 						}
 					} else {
 						Write-Output "Could not find required DLL in $($PFx86.Fullname)"
@@ -175,75 +175,75 @@ Function Load-DLL {
 
 # 0. Set up logfile
 # Main script body
-$scriptroot=Split-Path -parent $MyInvocation.MyCommand.Definition
-$global:logfile=$scriptroot+"\"+(Get-Date -format 'yyyy_MM_dd_HHmm')+"_Bandcamp_Zip_Extractor.log"
+$ScriptRoot=Split-Path -parent $MyInvocation.MyCommand.Definition
+$global:logfile=$ScriptRoot+"\"+(Get-Date -format 'yyyy_MM_dd_HHmm')+"_Bandcamp_Zip_Extractor.log"
 "$(Get-Date -Format 'yyyy-MM-dd HH:mm'): Bandcamp Zip Extractor" | Out-File -Filepath $global:logfile
 
 # 1. Prompt for location to search for zip files.
-[boolean]$validpath=$false
-while (!$validpath) {
-	$dirpath=Read-Host -Prompt "Enter top-level path to check for zipfiles"
+[boolean]$ValidPath=$false
+while (-not $ValidPath) {
+	$DirPath=Read-Host -Prompt "Enter top-level path to check for zipfiles"
 	try {
-		Test-Path $dirpath -ErrorAction Stop
-		"Searching $($dirpath) for Zip files to extract..." | Out-File -Filepath $global:logfile -append
-		$validpath=$true
+		Test-Path $DirPath -ErrorAction Stop
+		"Searching $($DirPath) for Zip files to extract..." | Out-File -Filepath $global:logfile -append
+		$ValidPath=$true
 	} catch {
 		Write-Warning -Message "Invalid path entered, please try again!"
 		Start-Sleep 3
 	}
-	cls
+	Clear-Host
 }
-Remove-Variable -name validpath -force
+Remove-Variable -name ValidPath -force
 
-$zipfiles=Get-ChildItem -Recurse -LiteralPath $dirpath -Filter "*.zip"
+$ZipFiles=Get-ChildItem -Recurse -LiteralPath $DirPath -Filter "*.zip"
 
 # 2. Iterate through found files.
-foreach ($zip in $zipfiles) {
+foreach ($Zip in $ZipFiles) {
 	# 3. Check if directory already exists and is populated with mp3s
-	if (Test-Path ($zip.Fullname -replace ".zip","")) {
-		if ((Get-ChildItem -LiteralPath ($zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
-			[boolean]$done=$true
-			"File $($zip.Fullname) appears to have already been extracted." | Out-File -Filepath $global:logfile -append
+	if (Test-Path ($Zip.Fullname -replace ".zip","")) {
+		if ((Get-ChildItem -LiteralPath ($Zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
+			[boolean]$Done=$true
+			"File $($Zip.Fullname) appears to have already been extracted." | Out-File -Filepath $global:logfile -append
 		}
 	}
-	if (!$done) {
+	if (-not $Done) {
 		# 4. Check for dash in filename, rename if found.
-		if ($zip.name -match " - ") {
-			$newname=($zip.Name -split " - ")[1]
-			if ($newname -match "^ ") {
-				$newname=$newname.TrimStart(" ")
+		if ($Zip.name -match " - ") {
+			$NewName=($Zip.Name -split " - ")[1]
+			if ($NewName -match "^ ") {
+				$NewName=$NewName.TrimStart(" ")
 			}
-			"Renaming $($zip.Name) to $($newname)..." | Out-File -Filepath $global:logfile -append
-			Rename-Item -LiteralPath $zip.fullname -NewName $newname
+			"Renaming $($Zip.Name) to $($NewName)..." | Out-File -Filepath $global:logfile -append
+			Rename-Item -LiteralPath $Zip.fullname -NewName $NewName
 		}
 		
 		# 5. Extract zip file to new folder in same location
-		if ($newname) {
-			[string]$source=$zip.Directory.ToString()+"\"+$newname
-			[string]$target=$zip.Directory.ToString()+"\"+$($newname -replace ".zip","")
-			Remove-Variable -name newname -force
+		if ($NewName) {
+			[string]$Source=$Zip.Directory.ToString()+"\"+$NewName
+			[string]$Target=$Zip.Directory.ToString()+"\"+$($NewName -replace ".zip","")
+			Remove-Variable -name NewName -force
 		} else {
-			[string]$source=$zip.FullName
-			[string]$target=($zip.FullName -replace ".zip","")
+			[string]$Source=$Zip.FullName
+			[string]$Target=($Zip.FullName -replace ".zip","")
 		}
 
-		Extract-Zip -file $source -location $target -cleanup $Cleanup		
+		Extract-Zip -file $Source -location $Target -cleanup $Cleanup		
 		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
-		$sample=(Get-ChildItem -LiteralPath $target -Filter "*.mp3")[0]
-		$count=($sample.Name -split " - ").count
-		if ($count -gt 1) {
-			[string]$prefix=""
-			for ($i=0;$i -lt $($count -1); $i++) {
-				$prefix+=($sample -split "-")[$i]
-				$prefix+="-"
+		$Sample=(Get-ChildItem -LiteralPath $Target -Filter "*.mp3")[0]
+		$Count=($Sample.Name -split " - ").count
+		if ($Count -gt 1) {
+			[string]$Prefix=""
+			for ($i=0;$i -lt $($Count -1); $i++) {
+				$Prefix+=($Sample -split "-")[$i]
+				$Prefix+="-"
 			}
-			if (($sample.Name -replace $prefix,"") -match "^ ") {
-				$prefix+=" "
+			if (($Sample.Name -replace $Prefix,"") -match "^ ") {
+				$Prefix+=" "
 			}
-			"Renaming files in directory $($target) to remove prefix $($prefix)..." | Out-File -Filepath $global:logfile -append
-			Rename-LongTracks -location $target -replace $prefix
+			"Renaming files in directory $($Target) to remove prefix $($Prefix)..." | Out-File -Filepath $global:logfile -append
+			Rename-LongTracks -location $Target -replace $Prefix
 		}
-		"All actions for file $($zip.Fullname) complete." | Out-File -Filepath $global:logfile -append
+		"All actions for file $($Zip.Fullname) complete." | Out-File -Filepath $global:logfile -append
 	} else {
 		Remove-Variable -Name done -force
 	}
