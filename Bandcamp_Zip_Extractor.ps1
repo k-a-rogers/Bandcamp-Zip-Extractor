@@ -195,6 +195,44 @@ while (-not $ValidPath) {
 }
 Remove-Variable -name ValidPath -force
 
+# Check individual mp3 files first if these are in scope
+
+if ($UpdateMetadata) {
+	$Mp3Files = Get-ChildItem -Recurse -Path $DirPath -Filter "*.mp3" | Where-Object -FilterScript {[datetime]$_.CreationTime -ge (Get-Date).AddHours(-48)}
+
+	if ($Mp3Files) {
+		Load-DLL
+		if ($global:loaded) {
+			foreach ($File in $Mp3Files) {
+				Write-Output "Checking metadata for $($File.Fullname)..."
+				"Checking metadata for $($File.Fullname)..." | Out-file -Filepath $global:logfile -append
+				$Metadata = [Taglib.File]::Create($File.Fullname)
+				if ($Metadata.Tag.Album -eq $null) {
+					Write-Output "$($File.Fullname) metadata incomplete, fixing..."
+					"$($File.Fullname) metadata incomplete, fixing..." | Out-file -Filepath $global:logfile -append
+					$Metadata.Tag.Album = $Metadata.Tag.Title
+					[boolean]$Changed = $True
+				}
+				if ($Metadata.Tag.Track -eq $null) {
+					$Metadata.Tag.Track = 1
+					[boolean]$Changed = $True
+				}
+				if ($Changed) {
+					$Metadata.Save()
+				}
+				Remove-variable -name Metadata -Force -ErrorAction SilentlyContinue
+				"Updated metadata for file $($File.fullname)" | Out-file -Filepath $global:logfile -append
+			}
+		} else {
+			Write-Output "Can't perform requested metadata updates as Taglib-Sharp is not loaded!"
+			"Can't perform requested metadata updates as Taglib-Sharp is not loaded!"  | Out-file -Filepath $global:logfile -append
+		}
+	} else {
+		Write-Output "UpdateMetadata switch enabled, but no recent MP3 files found requiring metadata update!"
+		"UpdateMetadata switch enabled, but no recent MP3 files found requiring metadata update!" | Out-file -Filepath $global:logfile -append
+	}
+}
+
 $ZipFiles=Get-ChildItem -Recurse -LiteralPath $DirPath -Filter "*.zip"
 
 # 2. Iterate through found files.
