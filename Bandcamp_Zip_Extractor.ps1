@@ -319,7 +319,7 @@ foreach ($Zip in $ZipFiles) {
 # Copy files to secondary location e.g. network share, portable music player
 
 $RemotePath = Read-Host -Prompt "Enter full path of directory where files should be copied. Press Enter to skip"
-if ($null -ne $RemotePath) {
+if ($RemotePath -ne "") {
 	try {
 		Test-Path -Path $RemotePath -ErrorAction Stop
 		Write-Output "Target directory $($RemotePath) found."
