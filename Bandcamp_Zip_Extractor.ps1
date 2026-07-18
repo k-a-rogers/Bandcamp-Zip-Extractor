@@ -266,7 +266,37 @@ foreach ($Zip in $ZipFiles) {
 		[string]$Source=$Zip.FullName
 	}
 
-	Extract-Zip -file $Source -location $Target -cleanup $Cleanup
+	# Extract-Zip -file $Source -location $Target -cleanup $Cleanup
+
+	Write-Output "Extracting all files from $($Zip.FullName)..."
+	"Extracting all files from $($Zip.FullName)..." | Out-File -Filepath $global:logfile -append
+
+	try {
+		if ($Overwrite) {
+			Expand-Archive -Literalpath $Zip.FullName -DestinationPath $Target -ErrorAction Stop -Force
+		} else {
+			Expand-Archive -Literalpath $Zip.FullName -DestinationPath $Target -ErrorAction Stop
+		}
+		Write-Output "$($Zip.Fullname) extraction complete."
+		"$($Zip.Fullname) extraction complete." | Out-File -Filepath $global:logfile -append
+	} catch {
+		Write-Output "An error occured extracting $($Zip.Fullname). The error message was:`n$($_.Exception.Message)"
+		"An error occured extracting $($Zip.Fullname). The error message was:", "`n", "$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
+		
+		break;
+	}
+
+	if ($Cleanup) {
+		try {
+			Write-Output "Cleanup enabled: deleting compressed file..."
+			"Cleanup enabled: deleting compressed file..." | Out-File -Filepath $global:logfile -append
+			Remove-Item -LiteralPath $Source -Force
+		} catch {
+			Write-Output "An error occured during cleanup for file $($Soure). The error message was:`n$($_.Exception.Message)"
+			"An error occured during cleanup for file $($Soure). The error message was:`n$($_.Exception.Message)" | Out-File -Filepath $global:logfile -append
+		}
+	}		
+
 
 	# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
 	$Sample=(Get-ChildItem -LiteralPath $Target -Filter "*.mp3")[0]
