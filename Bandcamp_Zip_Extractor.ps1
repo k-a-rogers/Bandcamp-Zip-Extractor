@@ -238,53 +238,52 @@ $ZipFiles=Get-ChildItem -Recurse -LiteralPath $DirPath -Filter "*.zip"
 # 2. Iterate through found files.
 foreach ($Zip in $ZipFiles) {
 	# 3. Check if directory already exists and is populated with mp3s
-	if (Test-Path ($Zip.Fullname -replace ".zip","")) {
-		if ((Get-ChildItem -LiteralPath ($Zip.Fullname -replace ".zip","") -filter "*.mp3").count -gt 0) {
-			[boolean]$Done=$true
+	$Target = $Zip.Directory.Fullname
+	if (Test-Path -Path $Target) {
+		if (((Get-ChildItem -LiteralPath $Target -filter "*.mp3").count -gt 0) -and (-not $Overwrite)) {
+			Write-Output "File $($Zip.Fullname) appears to have already been extracted."
 			"File $($Zip.Fullname) appears to have already been extracted." | Out-File -Filepath $global:logfile -append
-		}
-	}
-	if (-not $Done) {
-		# 4. Check for dash in filename, rename if found.
-		if ($Zip.name -match " - ") {
-			$NewName=($Zip.Name -split " - ")[1]
-			if ($NewName -match "^ ") {
-				$NewName=$NewName.TrimStart(" ")
-			}
-			"Renaming $($Zip.Name) to $($NewName)..." | Out-File -Filepath $global:logfile -append
-			Rename-Item -LiteralPath $Zip.fullname -NewName $NewName
-		}
-		
-		# 5. Extract zip file to new folder in same location
-		if ($NewName) {
-			[string]$Source=$Zip.Directory.ToString()+"\"+$NewName
-			[string]$Target=$Zip.Directory.ToString()+"\"+$($NewName -replace ".zip","")
-			Remove-Variable -name NewName -force
-		} else {
-			[string]$Source=$Zip.FullName
-			[string]$Target=($Zip.FullName -replace ".zip","")
-		}
 
-		Extract-Zip -file $Source -location $Target -cleanup $Cleanup		
-		# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
-		$Sample=(Get-ChildItem -LiteralPath $Target -Filter "*.mp3")[0]
-		$Count=($Sample.Name -split " - ").count
-		if ($Count -gt 1) {
-			[string]$Prefix=""
-			for ($i=0;$i -lt $($Count -1); $i++) {
-				$Prefix+=($Sample -split "-")[$i]
-				$Prefix+="-"
-			}
-			if (($Sample.Name -replace $Prefix,"") -match "^ ") {
-				$Prefix+=" "
-			}
-			"Renaming files in directory $($Target) to remove prefix $($Prefix)..." | Out-File -Filepath $global:logfile -append
-			Rename-LongTracks -location $Target -replace $Prefix
+			break;
 		}
-		"All actions for file $($Zip.Fullname) complete." | Out-File -Filepath $global:logfile -append
-	} else {
-		Remove-Variable -Name done -force
 	}
+	# 4. Check for dash in filename, rename if found.
+	if ($Zip.name -match " - ") {
+		$NewName=($Zip.Name -split " - ")[1]
+		if ($NewName -match "^ ") {
+			$NewName=$NewName.TrimStart(" ")
+		}
+		"Renaming $($Zip.Name) to $($NewName)..." | Out-File -Filepath $global:logfile -append
+		Rename-Item -LiteralPath $Zip.fullname -NewName $NewName
+	}
+	
+	# 5. Extract zip file to new folder in same location
+	if ($NewName) {
+		[string]$Source=$Zip.Directory.ToString()+"\"+$NewName
+		[string]$Target=$Zip.Directory.ToString()+"\"+$($NewName -replace ".zip","")
+		Remove-Variable -name NewName -force
+	} else {
+		[string]$Source=$Zip.FullName
+	}
+
+	Extract-Zip -file $Source -location $Target -cleanup $Cleanup
+
+	# 6. Examine filenames in new folder for common fragments e.g "Artist - Album - " or similar.
+	$Sample=(Get-ChildItem -LiteralPath $Target -Filter "*.mp3")[0]
+	$Count=($Sample.Name -split " - ").count
+	if ($Count -gt 1) {
+		[string]$Prefix=""
+		for ($i=0;$i -lt $($Count -1); $i++) {
+			$Prefix+=($Sample -split "-")[$i]
+			$Prefix+="-"
+		}
+		if (($Sample.Name -replace $Prefix,"") -match "^ ") {
+			$Prefix+=" "
+		}
+		"Renaming files in directory $($Target) to remove prefix $($Prefix)..." | Out-File -Filepath $global:logfile -append
+		Rename-LongTracks -location $Target -replace $Prefix
+	}
+	"All actions for file $($Zip.Fullname) complete." | Out-File -Filepath $global:logfile -append
 }
 
 # Copy files to secondary location e.g. network share, portable music player
