@@ -133,7 +133,7 @@ if ($UpdateMetadata) {
 					$Metadata.Tag.Album = $Metadata.Tag.Title
 					[boolean]$Changed = $True
 				}
-				if ($Metadata.Tag.Track -eq $null) {
+				if ($Metadata.Tag.Track -eq 0) {
 					$Metadata.Tag.Track = 1
 					[boolean]$Changed = $True
 				}
