@@ -1,10 +1,10 @@
 param(
 	[parameter(mandatory=$false)]
-	[boolean]$UpdateMetadata = $false,
+	[switch]$UpdateMetadata = $false,
 	[parameter(mandatory=$false)]
-	[boolean]$Cleanup = $false,
+	[switch]$Cleanup = $false,
 	[parameter(mandatory=$false)]
-	[boolean]$Overwrite = $false
+	[switch]$Overwrite = $false
 )
 
 Function Extract-Zip {
